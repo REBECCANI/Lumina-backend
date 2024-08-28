@@ -29,22 +29,30 @@ app.use((req, res, next) => {
 
 app.post("/home", (req, res) => {
     const { firstName, lastName, email, password, institution, category, verificationToken } = req.body;
-    const hashedPassword = bcrypt.hashSync(password, 10); 
-
-    const query = `
-        INSERT INTO users_lumina (firstName, lastName, email, password, verificationToken, verified, expires)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-    `;
-    const values = [firstName, lastName, email, hashedPassword, verificationToken, false, Date.now() + 3600000]; 
-
-    db.query(query, values, (err, result) => {
+    bcrypt.hash(password, 10, (err, hashedPassword) => {
         if (err) {
-            console.error('Error inserting user into the database:', err.message);
-            return res.status(500).json({ error: `Database error: ${err.message}` });
+            console.error('Error hashing password:', err);
+            return res.status(500).json({ error: 'Internal server error' });
         }
-
-        res.json({ message: 'User registered successfully', verificationLink: `https://lumina-backend-jza3.onrender.com/verify/${verificationToken}` });
-        console.log('Hashed Password during registration:', hashedPassword);
+    
+        const query = `
+            INSERT INTO users_lumina (firstName, lastName, email, password, verificationToken, verified, expires)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        `;
+        const values = [firstName, lastName, email, hashedPassword, verificationToken, false, Date.now() + 3600000]; 
+    
+        db.query(query, values, (err, result) => {
+            if (err) {
+                console.error('Error inserting user into the database:', err.message);
+                return res.status(500).json({ error: `Database error: ${err.message}` });
+            }
+    
+            res.json({
+                message: 'User registered successfully',
+                verificationLink: `https://lumina-backend-jza3.onrender.com/verify/${verificationToken}`
+            });
+            console.log('Hashed Password during registration:', hashedPassword);
+        });
     });
 });
 
