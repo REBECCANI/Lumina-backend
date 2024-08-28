@@ -43,7 +43,7 @@ app.post("/home", (req, res) => {
             return res.status(500).json({ error: 'Database error' });
         }
 
-        res.json({ message: 'User registered successfully', verificationLink: `https://localhost:5000/verify/${verificationToken}` });
+        res.json({ message: 'User registered successfully', verificationLink: `https://lumina-backend-jza3.onrender.com/verify/${verificationToken}` });
         console.log('Hashed Password during registration:', hashedPassword);
     });
 });
