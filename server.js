@@ -39,8 +39,8 @@ app.post("/home", (req, res) => {
 
     db.query(query, values, (err, result) => {
         if (err) {
-            console.error('Error inserting user into the database:', err);
-            return res.status(500).json({ error: 'Database error' });
+            console.error('Error inserting user into the database:', err.message);
+            return res.status(500).json({ error: `Database error: ${err.message}` });
         }
 
         res.json({ message: 'User registered successfully', verificationLink: `https://lumina-backend-jza3.onrender.com/verify/${verificationToken}` });
