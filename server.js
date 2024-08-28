@@ -10,7 +10,7 @@ const bcrypt = require('bcryptjs');
 require('dotenv').config();
 
 app.use(cors({
-    origin: 'http://localhost:3000',
+    origin: 'https://lumina-frontend-bbf9.vercel.app',
     optionsSuccessStatus: 200,
     methods: ['GET', 'POST'],
     allowedHeaders: ['Content-Type', 'Authorization'],
@@ -18,8 +18,6 @@ app.use(cors({
 }));
 
 app.use(express.json());
-
-
 app.use(bodyParser.json());
 
 app.use((req, res, next) => {
@@ -31,15 +29,12 @@ app.use((req, res, next) => {
 
 app.post("/home", (req, res) => {
     const { firstName, lastName, email, password, institution, category, verificationToken } = req.body;
-
     const hashedPassword = bcrypt.hashSync(password, 10); 
-    
 
     const query = `
         INSERT INTO users_lumina (firstName, lastName, email, password, verificationToken, verified, expires)
         VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
-
     const values = [firstName, lastName, email, hashedPassword, verificationToken, false, Date.now() + 3600000]; 
 
     db.query(query, values, (err, result) => {
@@ -49,7 +44,7 @@ app.post("/home", (req, res) => {
         }
 
         res.json({ message: 'User registered successfully', verificationLink: `https://localhost:5000/verify/${verificationToken}` });
-    console.log('Hashed Password during registration:', hashedPassword);
+        console.log('Hashed Password during registration:', hashedPassword);
     });
 });
 
@@ -82,7 +77,7 @@ app.get("/verify/:token", (req, res) => {
                 return res.status(500).json({ error: 'Database error' });
             }
 
-            res.redirect('http://localhost:3000/confirm');
+            res.redirect('https://lumina-frontend-bbf9.vercel.app/confirm');
         });
     });
 });
@@ -129,7 +124,6 @@ app.post("/login", (req, res) => {
         
             console.log('Login successful');
 
-            // Send back user data including category
             res.json({
                 message: 'Login successful',
                 user: {
