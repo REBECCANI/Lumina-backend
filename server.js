@@ -1,0 +1,152 @@
+const express = require('express');
+const app = express();
+const port = 5000;
+const cors = require("cors");
+const path = require('path'); 
+const { v4: uuidv4 } = require('uuid');
+const bodyParser = require("body-parser"); 
+const db = require("./db");
+const bcrypt = require('bcrypt');
+require('dotenv').config();
+
+app.use(cors({
+    origin: 'http://localhost:3000',
+    optionsSuccessStatus: 200,
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+}));
+
+app.use(express.json());
+
+
+app.use(bodyParser.json());
+
+app.use((req, res, next) => {
+    console.log(`${req.method} ${req.url}`);
+    console.log('Headers:', req.headers);
+    console.log('Body:', req.body);
+    next();
+});
+
+app.post("/home", (req, res) => {
+    const { firstName, lastName, email, password, institution, category, verificationToken } = req.body;
+
+    const hashedPassword = bcrypt.hashSync(password, 10); 
+    
+
+    const query = `
+        INSERT INTO users_lumina (firstName, lastName, email, password, verificationToken, verified, expires)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    const values = [firstName, lastName, email, hashedPassword, verificationToken, false, Date.now() + 3600000]; 
+
+    db.query(query, values, (err, result) => {
+        if (err) {
+            console.error('Error inserting user into the database:', err);
+            return res.status(500).json({ error: 'Database error' });
+        }
+
+        res.json({ message: 'User registered successfully', verificationLink: `https://localhost:5000/verify/${verificationToken}` });
+    console.log('Hashed Password during registration:', hashedPassword);
+    });
+});
+
+app.get("/verify/:token", (req, res) => {
+    const { token } = req.params;
+
+    const query = `
+        SELECT * FROM users_lumina WHERE verificationToken = ? AND expires > ?
+    `;
+
+    db.query(query, [token, Date.now()], (err, results) => {
+        if (err) {
+            console.error('Error querying the database:', err);
+            return res.status(500).json({ error: 'Database error' });
+        }
+
+        if (results.length === 0) {
+            return res.status(400).json({ error: 'Token is invalid or expired' });
+        }
+
+        const user = results[0];
+
+        const updateQuery = `
+            UPDATE users_lumina SET verified = ? WHERE verificationToken = ?
+        `;
+
+        db.query(updateQuery, [true, token], (updateErr) => {
+            if (updateErr) {
+                console.error('Error updating the user verification status:', updateErr);
+                return res.status(500).json({ error: 'Database error' });
+            }
+
+            res.redirect('http://localhost:3000/confirm');
+        });
+    });
+});
+
+app.post("/login", (req, res) => {
+    console.log('Login route hit');
+    const { email, password } = req.body;
+    console.log('Login attempt for:', email);
+
+    if (!email || !password) {
+        console.log('Missing email or password');
+        return res.status(400).json({ error: 'Email and password are required' });
+    }
+
+    const query = 'SELECT * FROM users_lumina WHERE email = ? AND verified = ?';
+
+    db.query(query, [email, true], (err, results) => {
+        if (err) {
+            console.error('Error querying the database:', err);
+            return res.status(500).json({ error: 'Database error' });
+        }
+
+        console.log('Query results:', results);
+
+        if (results.length === 0) {
+            console.log('No user found or not verified');
+            return res.status(400).json({ error: 'Invalid email or the account is not verified' });
+        }
+
+        const user = results[0];
+
+        bcrypt.compare(password, user.password, (bcryptErr, isMatch) => {
+            if (bcryptErr) {
+                console.error('Error comparing passwords:', bcryptErr);
+                return res.status(500).json({ error: 'Internal server error' });
+            }
+        
+            if (!isMatch) {
+                console.log('Provided password:', password);
+                console.log('Stored hashed password:', user.password);
+                console.log('Invalid password');
+                return res.status(400).json({ error: 'Invalid password' });
+            }
+        
+            console.log('Login successful');
+
+            // Send back user data including category
+            res.json({
+                message: 'Login successful',
+                user: {
+                    id: user.id,
+                    firstName: user.firstName,
+                    lastName: user.lastName
+                }
+            });
+        });
+    });
+});
+
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({ error: 'Something went wrong!' });
+});
+
+app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+});
