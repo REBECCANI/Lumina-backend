@@ -11,7 +11,7 @@ require('dotenv').config();
 
 const allowedOrigins = [
     'https://lumina-frontend-bbf9.vercel.app',
-    'https://luminacoreapp.org', 
+    'https://www.luminacoreapp.org', 
     'http://localhost:3000' 
   ];
   
@@ -64,7 +64,7 @@ app.post("/home", (req, res) => {
     
             res.json({
                 message: 'User registered successfully',
-                verificationLink: `https://lumina-backend-jza3.onrender.com/verify/${verificationToken}`
+                verificationLink: `https://www.lumina-backend-jza3.onrender.com/verify/${verificationToken}`
             });
             console.log('Hashed Password during registration:', hashedPassword);
         });
@@ -100,7 +100,7 @@ app.get("/verify/:token", (req, res) => {
                 return res.status(500).json({ error: 'Database error' });
             }
 
-            res.redirect('https://luminacoreapp.org/confirm');
+            res.redirect('https://www.luminacoreapp.org/confirm');
         });
     });
 });
