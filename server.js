@@ -11,8 +11,8 @@ require('dotenv').config();
 
 const allowedOrigins = [
     'https://lumina-frontend-bbf9.vercel.app',
-    'https://your-new-domain.com', // Add your new Namecheap domain here
-    'http://localhost:3000' // Optionally allow localhost for development
+    'https://luminacoreapp.org', 
+    'http://localhost:3000' 
   ];
   
   app.use(cors({
@@ -100,7 +100,7 @@ app.get("/verify/:token", (req, res) => {
                 return res.status(500).json({ error: 'Database error' });
             }
 
-            res.redirect('https://lumina-frontend-bbf9.vercel.app/confirm');
+            res.redirect('https://luminacoreapp.org/confirm');
         });
     });
 });
