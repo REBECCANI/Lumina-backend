@@ -111,7 +111,7 @@ app.post("/login", (req, res) => {
     console.log('Login attempt for:', email);
 
     if (!email || !password) {
-        console.log('Missing email or password');
+        console.log('Missing email or password!');
         return res.status(400).json({ error: 'Email and password are required' });
     }
 
