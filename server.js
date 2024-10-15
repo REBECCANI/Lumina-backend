@@ -112,7 +112,7 @@ app.post("/login", (req, res) => {
 
     if (!email || !password) {
         console.log('Missing email or password!');
-        return res.status(400).json({ error: 'Email and password are required' });
+        return res.status(400).json({ error: 'Email and password are required!' });
     }
 
     const query = 'SELECT * FROM users_lumina WHERE email = ? AND verified = ?';
